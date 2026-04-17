@@ -10,7 +10,10 @@ pip install -r requirements.txt
 # 2. Add .ttf fonts (see input/fonts/README.md for recommendations)
 cp /path/to/your/font.ttf input/fonts/
 
-# 3. Generate 1 000 labelled images
+# 3. Validate that the fonts cover Serbian Latin + Cyrillic
+python validate_fonts.py
+
+# 4. Generate 1 000 labelled images
 python generate.py --count 1000
 ```
 
@@ -58,9 +61,15 @@ optional arguments:
   --count N, -n N  Total number of images to generate (default: 1000)
 ```
 
+```
+usage: validate_fonts.py [-h] [--dicts-dir DICTS_DIR] [--fonts-dir FONTS_DIR]
+
+Checks every font in `input/fonts/` and fails if any required Serbian Latin or
+Cyrillic character used by the bundled dictionaries is missing.
+```
+
 ## Adding more dictionaries
 
 Drop any UTF-8 `.txt` file (one word or sentence per line) into `input/dicts/`.
 The script automatically detects Cyrillic-only files and produces a matching
 Latin-script transliteration, keeping both scripts balanced in the dataset.
-
