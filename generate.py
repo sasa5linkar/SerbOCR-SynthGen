@@ -10,7 +10,6 @@ Requirements:
 """
 
 import argparse
-import os
 import random
 import unicodedata
 from pathlib import Path
@@ -92,8 +91,9 @@ def load_fonts(font_dir: Path) -> list[Path]:
 
 def pick_font_size(font_path: Path, text: str, target_height: int) -> ImageFont.FreeTypeFont:
     """
-    Binary-search for the largest font size whose rendered cap-height fits
-    within *target_height* (minus vertical margins).
+    Binary-search for the largest font size whose full rendered text bounding
+    box height (including ascenders and descenders) fits within *target_height*
+    (minus vertical margins).
     """
     usable_h = target_height - 2 * 4  # 4 px top/bottom padding
     lo, hi = 8, target_height * 2
@@ -181,9 +181,17 @@ def apply_augmentations(img: Image.Image) -> Image.Image:
     return img
 
 
-def generate_dataset(count: int) -> None:
+def generate_dataset(count: int, overwrite: bool = False) -> None:
     """Generate *count* labelled OCR images and write them to OUTPUT_DIR."""
     OUTPUT_DIR.mkdir(parents=True, exist_ok=True)
+
+    # Guard against accidental overwrites.
+    existing = list(OUTPUT_DIR.glob("*.jpg")) + list(OUTPUT_DIR.glob("*.png"))
+    if existing and not overwrite:
+        raise FileExistsError(
+            f"Output directory '{OUTPUT_DIR}' already contains {len(existing)} image(s). "
+            "Pass --overwrite to replace them."
+        )
 
     words = load_words(INPUT_DICTS)
     fonts = load_fonts(INPUT_FONTS)
@@ -191,13 +199,26 @@ def generate_dataset(count: int) -> None:
     if not words:
         raise ValueError("No words loaded from dictionary files.")
 
+    # Split entries by script for balanced sampling.
+    cyrillic_words = [(t, True) for t, is_cyr in words if is_cyr]
+    latin_words = [(t, False) for t, is_cyr in words if not is_cyr]
+
+    if not cyrillic_words or not latin_words:
+        # Fallback: use the full pool when one script is absent entirely.
+        buckets = [words]
+    else:
+        buckets = [cyrillic_words, latin_words]
+
     labels_path = OUTPUT_DIR / "labels.txt"
     generated = 0
+    bucket_index = 0  # alternates between Cyrillic and Latin buckets
 
     with open(labels_path, "w", encoding="utf-8") as labels_file:
         with tqdm(total=count, desc="Generating", unit="img") as pbar:
             while generated < count:
-                text, _is_cyr = random.choice(words)
+                bucket = buckets[bucket_index % len(buckets)]
+                bucket_index += 1
+                text, _is_cyr = random.choice(bucket)
                 if not text:
                     continue
 
@@ -226,6 +247,17 @@ def generate_dataset(count: int) -> None:
 # CLI
 # ---------------------------------------------------------------------------
 
+def positive_int(value: str) -> int:
+    """Argparse type that accepts only positive integers."""
+    try:
+        ivalue = int(value)
+    except ValueError:
+        raise argparse.ArgumentTypeError(f"'{value}' is not an integer.")
+    if ivalue < 1:
+        raise argparse.ArgumentTypeError(f"count must be a positive integer, got {ivalue}.")
+    return ivalue
+
+
 def parse_args() -> argparse.Namespace:
     parser = argparse.ArgumentParser(
         description="Generate a synthetic Serbian OCR dataset (Cyrillic & Latin)."
@@ -233,14 +265,19 @@ def parse_args() -> argparse.Namespace:
     parser.add_argument(
         "--count",
         "-n",
-        type=int,
+        type=positive_int,
         default=1000,
         metavar="N",
         help="Total number of images to generate (default: 1000).",
+    )
+    parser.add_argument(
+        "--overwrite",
+        action="store_true",
+        help="Overwrite existing images in the output directory.",
     )
     return parser.parse_args()
 
 
 if __name__ == "__main__":
     args = parse_args()
-    generate_dataset(args.count)
+    generate_dataset(args.count, overwrite=args.overwrite)
