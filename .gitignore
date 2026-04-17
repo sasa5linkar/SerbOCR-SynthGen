@@ -1,3 +1,13 @@
+# SerbOCR-SynthGen — project-specific ignores
+# Generated output images and labels
+output/*.jpg
+output/*.png
+output/*.txt
+
+# Font binaries (add your own to input/fonts/, see README there)
+input/fonts/*.ttf
+input/fonts/*.otf
+
 # Byte-compiled / optimized / DLL files
 __pycache__/
 *.py[codz]
