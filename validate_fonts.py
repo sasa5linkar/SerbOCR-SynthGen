@@ -59,7 +59,7 @@ def load_required_characters(dicts_dir: Path) -> list[str]:
     required_chars = set(SERBIAN_CORE_TEXT)
     for path in txt_files:
         text = path.read_text(encoding="utf-8")
-        required_chars.update(char for char in text if not char.isspace())
+        required_chars.update(set(text) - set(" \t\r\n\v\f"))
 
     return sorted(required_chars, key=ord)
 

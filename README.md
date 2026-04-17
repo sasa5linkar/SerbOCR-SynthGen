@@ -64,8 +64,9 @@ optional arguments:
 ```
 usage: validate_fonts.py [-h] [--dicts-dir DICTS_DIR] [--fonts-dir FONTS_DIR]
 
-Checks every font in `input/fonts/` and fails if any required Serbian Latin or
-Cyrillic character used by the bundled dictionaries is missing.
+Checks each font in `input/fonts/`, reports which fonts are missing required
+Serbian Latin or Cyrillic characters used by the bundled dictionaries, and
+exits with code `1` if any font fails.
 ```
 
 ## Adding more dictionaries
