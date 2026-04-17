@@ -48,7 +48,9 @@ def ensure_fontconfig() -> None:
     if shutil.which("fc-query"):
         return
     raise RuntimeError(
-        "Missing required system tool 'fc-query'. Install fontconfig to validate font coverage."
+        "Missing required system tool 'fc-query'. Install fontconfig to validate font "
+        "coverage (for example: `apt install fontconfig`, `brew install fontconfig`, "
+        "or `dnf install fontconfig`)."
     )
 
 
@@ -96,7 +98,11 @@ def read_font_charset(font_path: Path) -> set[int]:
 
 
 def format_missing_characters(chars: list[str]) -> str:
-    return ", ".join(f"{char} (U+{ord(char):06X})" for char in chars)
+    formatted = []
+    for char in chars:
+        codepoint = f"{ord(char):X}"
+        formatted.append(f"{char} (U+{codepoint.zfill(max(4, len(codepoint)))})")
+    return ", ".join(formatted)
 
 
 def main() -> int:
