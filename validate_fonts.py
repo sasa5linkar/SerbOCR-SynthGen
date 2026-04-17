@@ -16,6 +16,7 @@ from pathlib import Path
 BASE_DIR = Path(__file__).resolve().parent
 DEFAULT_DICTS_DIR = BASE_DIR / "input" / "dicts"
 DEFAULT_FONTS_DIR = BASE_DIR / "input" / "fonts"
+WHITESPACE_CHARS = " \t\r\n\v\f"
 
 SERBIAN_CORE_TEXT = (
     "АБВГДЂЕЖЗИЈКЛЉМНЊОПРСТЋУФХЦЧЏШ"
@@ -59,7 +60,7 @@ def load_required_characters(dicts_dir: Path) -> list[str]:
     required_chars = set(SERBIAN_CORE_TEXT)
     for path in txt_files:
         text = path.read_text(encoding="utf-8")
-        required_chars.update(set(text) - set(" \t\r\n\v\f"))
+        required_chars.update(set(text) - set(WHITESPACE_CHARS))
 
     return sorted(required_chars, key=ord)
 
@@ -95,7 +96,7 @@ def read_font_charset(font_path: Path) -> set[int]:
 
 
 def format_missing_characters(chars: list[str]) -> str:
-    return ", ".join(f"{char} (U+{ord(char):04X})" for char in chars)
+    return ", ".join(f"{char} (U+{ord(char):06X})" for char in chars)
 
 
 def main() -> int:
