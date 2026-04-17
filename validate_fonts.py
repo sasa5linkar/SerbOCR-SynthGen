@@ -101,7 +101,7 @@ def format_missing_characters(chars: list[str]) -> str:
     formatted = []
     for char in chars:
         codepoint = f"{ord(char):X}"
-        formatted.append(f"{char} (U+{codepoint.zfill(max(4, len(codepoint)))})")
+        formatted.append(f"{char} (U+{codepoint.zfill(4)})")
     return ", ".join(formatted)
 
 
