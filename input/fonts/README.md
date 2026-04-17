@@ -15,6 +15,7 @@ Place `.ttf` (TrueType) font files here before running `generate.py`.
 Download the `.ttf` files and copy them to this directory, then run:
 
 ```bash
+python validate_fonts.py
 python generate.py --count 5000
 ```
 
